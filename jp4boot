@@ -1,20 +1,40 @@
 #!/bin/bash
 # Bootstrap a new macOS SwiftUI app from template
-# Usage: jp4boot AppName
+# Usage: jp4boot AppName [--bundle-id com.example]
 #        Creates ./AppName/ with complete project structure
 
 set -e
 
-# --- Validate input ---
-if [ -z "$1" ]; then
-    echo "Usage: $0 AppName"
+# --- Parse arguments ---
+APP_NAME=""
+BUNDLE_PREFIX=""
+NOTARY_PROFILE=""
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --bundle-id) BUNDLE_PREFIX="$2"; shift 2 ;;
+        --notary-profile) NOTARY_PROFILE="$2"; shift 2 ;;
+        -*) echo "Unknown option: $1"; exit 1 ;;
+        *) APP_NAME="$1"; shift ;;
+    esac
+done
+
+if [ -z "$APP_NAME" ]; then
+    echo "Usage: $0 AppName [options]"
     echo "Creates ./AppName/ with complete project structure"
+    echo ""
+    echo "Options:"
+    echo "  --bundle-id PREFIX        Bundle ID prefix (default: com.example)"
+    echo "                            Result: PREFIX.appname"
+    echo "  --notary-profile NAME     Keychain profile for notarization"
+    echo "                            (default: notary)"
     exit 1
 fi
 
-APP_NAME="$1"
 APP_NAME_LOWER=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]')
-BUNDLE_ID="io.jp4.${APP_NAME_LOWER}"
+BUNDLE_PREFIX="${BUNDLE_PREFIX:-com.example}"
+BUNDLE_ID="${BUNDLE_PREFIX}.${APP_NAME_LOWER}"
+NOTARY_PROFILE="${NOTARY_PROFILE:-notary}"
 YEAR=$(date +%Y)
 
 TEMPLATE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/templates"
@@ -40,6 +60,7 @@ apply_template() {
     local dst="$2"
     sed -e "s/__APP_NAME__/$APP_NAME/g" \
         -e "s/__BUNDLE_ID__/$BUNDLE_ID/g" \
+        -e "s/__NOTARY_PROFILE__/$NOTARY_PROFILE/g" \
         -e "s/__YEAR__/$YEAR/g" \
         "$src" > "$dst"
 }

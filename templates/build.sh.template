@@ -16,6 +16,7 @@ APP_NAME="__APP_NAME__"
 BUILD_DIR="$SCRIPT_DIR/build"
 SPM_BUILD_DIR="$SCRIPT_DIR/.build"
 ICON_SOURCE="Resources/AppIcon.png"
+NOTARY_PROFILE="${NOTARY_PROFILE:-__NOTARY_PROFILE__}"
 MODE="${1:-debug}"
 
 # --- Clean ---
@@ -131,7 +132,7 @@ codesign --force --sign "$IDENTITY" "$DMG_PATH"
 # --- Notarization ---
 echo "Submitting for notarization (this may take a few minutes)..."
 xcrun notarytool submit "$DMG_PATH" \
-    --keychain-profile "jp4-notary" --wait
+    --keychain-profile "$NOTARY_PROFILE" --wait
 
 echo "Stapling notarization ticket..."
 xcrun stapler staple "$DMG_PATH"
