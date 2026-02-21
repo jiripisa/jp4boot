@@ -37,7 +37,14 @@ BUNDLE_ID="${BUNDLE_PREFIX}.${APP_NAME_LOWER}"
 NOTARY_PROFILE="${NOTARY_PROFILE:-notary}"
 YEAR=$(date +%Y)
 
-TEMPLATE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/templates"
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+# Resolve symlinks to find the real location
+while [ -L "$SCRIPT_PATH" ]; do
+    SCRIPT_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ "$SCRIPT_PATH" != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+TEMPLATE_DIR="$(cd "$(dirname "$SCRIPT_PATH")" && pwd)/templates"
 TARGET_DIR="$(pwd)/$APP_NAME"
 
 if [ -d "$TARGET_DIR" ]; then
