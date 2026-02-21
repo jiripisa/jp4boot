@@ -18,7 +18,11 @@ sudo rm /usr/local/bin/jp4boot && rm -rf ~/.jp4boot
 
 ## Update
 
-Run the install command again — it detects existing installation and pulls the latest version.
+```bash
+curl -fsSL https://raw.githubusercontent.com/jiripisa/jp4boot/main/install.sh | bash
+```
+
+Same command as install — it detects existing installation and pulls the latest version.
 
 ## Usage
 
