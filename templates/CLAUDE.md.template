@@ -3,10 +3,15 @@
 ## Build & Run
 
 ```bash
-./build.sh              # Full build + sign + notarize + DMG
-./build.sh build-only   # Just build and bundle (for development)
+./build.sh              # Debug build (default)
+./build.sh debug        # Debug build (same as above)
+./build.sh release      # Optimized release build + app bundle
+./build.sh dist         # Release build + sign + notarize + DMG
 ./build.sh clean        # Remove build artifacts
-./run.sh                # Auto-build if needed, then launch
+
+./run.sh                # Debug — runs in terminal, log output visible (default)
+./run.sh debug          # Same as above
+./run.sh release        # Release — opens .app bundle
 ```
 
 ## Tech Stack

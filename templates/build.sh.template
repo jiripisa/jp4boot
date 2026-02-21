@@ -1,8 +1,11 @@
 #!/bin/bash
 # Build script for __APP_NAME__
-# Usage: ./build.sh              — full build + sign + notarize + DMG
-#        ./build.sh build-only   — just build and bundle (for development)
-#        ./build.sh clean        — remove build artifacts
+# Usage: ./build.sh [debug|release|dist|clean]
+#
+#   debug   — debug build, no optimization (default)
+#   release — optimized build + app bundle
+#   dist    — release build + sign + notarize + DMG
+#   clean   — remove build artifacts
 
 set -e
 
@@ -10,14 +13,13 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 APP_NAME="__APP_NAME__"
-BUNDLE_ID="__BUNDLE_ID__"
 BUILD_DIR="$SCRIPT_DIR/build"
 SPM_BUILD_DIR="$SCRIPT_DIR/.build"
-APP_BUNDLE="$BUILD_DIR/$APP_NAME.app"
 ICON_SOURCE="Resources/AppIcon.png"
+MODE="${1:-debug}"
 
 # --- Clean ---
-if [ "$1" == "clean" ]; then
+if [ "$MODE" == "clean" ]; then
     echo "Cleaning build artifacts..."
     rm -rf "$BUILD_DIR"
     rm -rf "$SPM_BUILD_DIR"
@@ -25,9 +27,25 @@ if [ "$1" == "clean" ]; then
     exit 0
 fi
 
-# --- Build ---
-echo "Building $APP_NAME..."
-swift build -c release
+# --- Validate mode ---
+if [[ "$MODE" != "debug" && "$MODE" != "release" && "$MODE" != "dist" ]]; then
+    echo "Unknown mode: $MODE"
+    echo "Usage: ./build.sh [debug|release|dist|clean]"
+    exit 1
+fi
+
+# --- SPM Build ---
+if [ "$MODE" == "debug" ]; then
+    SPM_CONFIG="debug"
+    APP_BUNDLE="$BUILD_DIR/debug/$APP_NAME.app"
+    echo "Building $APP_NAME (debug)..."
+else
+    SPM_CONFIG="release"
+    APP_BUNDLE="$BUILD_DIR/release/$APP_NAME.app"
+    echo "Building $APP_NAME (release)..."
+fi
+
+swift build -c "$SPM_CONFIG"
 
 # --- App Bundle ---
 echo "Creating app bundle..."
@@ -35,14 +53,14 @@ mkdir -p "$APP_BUNDLE/Contents/MacOS"
 mkdir -p "$APP_BUNDLE/Contents/Resources"
 
 # Copy executable
-cp "$SPM_BUILD_DIR/release/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/"
+cp "$SPM_BUILD_DIR/$SPM_CONFIG/$APP_NAME" "$APP_BUNDLE/Contents/MacOS/"
 
 # Copy Info.plist
 cp "Resources/Info.plist" "$APP_BUNDLE/Contents/"
 
 # Generate .icns from PNG source
 if [ -f "$ICON_SOURCE" ]; then
-    echo "Generating app icon from $ICON_SOURCE..."
+    echo "Generating app icon..."
     ICONSET_DIR=$(mktemp -d)/${APP_NAME}.iconset
     mkdir -p "$ICONSET_DIR"
     sips -z 16 16     "$ICON_SOURCE" --out "$ICONSET_DIR/icon_16x16.png"      > /dev/null
@@ -69,9 +87,9 @@ xattr -cr "$APP_BUNDLE"
 
 echo "Build complete: $APP_BUNDLE"
 
-# --- Stop here if build-only ---
-if [ "$1" == "build-only" ]; then
-    echo "To run: ./run.sh"
+# --- Stop here unless dist ---
+if [ "$MODE" != "dist" ]; then
+    echo "To run: ./run.sh $SPM_CONFIG"
     exit 0
 fi
 
@@ -82,7 +100,6 @@ if [ -z "$IDENTITY" ]; then
     echo ""
     echo "WARNING: No 'Developer ID Application' identity found in Keychain."
     echo "Skipping code signing and notarization."
-    echo "To run: ./run.sh"
     exit 0
 fi
 
@@ -115,4 +132,3 @@ xcrun stapler staple "$DMG_PATH"
 
 echo ""
 echo "Done! Signed and notarized DMG: $DMG_PATH"
-echo "To run: ./run.sh"
