@@ -24,17 +24,55 @@ if [ -z "$APP_NAME" ]; then
     echo "Creates ./AppName/ with complete project structure"
     echo ""
     echo "Options:"
-    echo "  --bundle-id PREFIX        Bundle ID prefix (default: com.example)"
-    echo "                            Result: PREFIX.appname"
+    echo "  --bundle-id PREFIX        Bundle ID prefix"
     echo "  --notary-profile NAME     Keychain profile for notarization"
-    echo "                            (default: notary)"
+    echo ""
+    echo "Environment variables (add to ~/.zshrc for persistent defaults):"
+    echo "  JP4BOOT_BUNDLE_ID         Default bundle ID prefix"
+    echo "  JP4BOOT_NOTARY_PROFILE    Default notary keychain profile"
     exit 1
 fi
 
 APP_NAME_LOWER=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]')
-BUNDLE_PREFIX="${BUNDLE_PREFIX:-com.example}"
-BUNDLE_ID="${BUNDLE_PREFIX}.${APP_NAME_LOWER}"
-NOTARY_PROFILE="${NOTARY_PROFILE:-notary}"
+
+# Resolve bundle ID: --bundle-id flag > JP4BOOT_BUNDLE_ID env > default
+if [ -n "$BUNDLE_PREFIX" ]; then
+    BUNDLE_ID="${BUNDLE_PREFIX}.${APP_NAME_LOWER}"
+elif [ -n "$JP4BOOT_BUNDLE_ID" ]; then
+    BUNDLE_ID="${JP4BOOT_BUNDLE_ID}.${APP_NAME_LOWER}"
+    BUNDLE_PREFIX="$JP4BOOT_BUNDLE_ID"
+else
+    BUNDLE_PREFIX="com.example"
+    BUNDLE_ID="${BUNDLE_PREFIX}.${APP_NAME_LOWER}"
+fi
+
+# Resolve notary profile: --notary-profile flag > JP4BOOT_NOTARY_PROFILE env > default
+if [ -z "$NOTARY_PROFILE" ]; then
+    if [ -n "$JP4BOOT_NOTARY_PROFILE" ]; then
+        NOTARY_PROFILE="$JP4BOOT_NOTARY_PROFILE"
+    else
+        NOTARY_PROFILE="notary"
+    fi
+fi
+
+# Warn about defaults
+USING_DEFAULTS=()
+if [ "$BUNDLE_PREFIX" == "com.example" ]; then
+    USING_DEFAULTS+=("bundle-id")
+fi
+if [ "$NOTARY_PROFILE" == "notary" ]; then
+    USING_DEFAULTS+=("notary-profile")
+fi
+
+if [ ${#USING_DEFAULTS[@]} -gt 0 ]; then
+    echo "Note: Using default values for: ${USING_DEFAULTS[*]}"
+    echo "  You can set your own via flags or environment variables:"
+    [ "$BUNDLE_PREFIX" == "com.example" ] && \
+        echo "    --bundle-id PREFIX       or  export JP4BOOT_BUNDLE_ID=\"com.yourcompany\""
+    [ "$NOTARY_PROFILE" == "notary" ] && \
+        echo "    --notary-profile NAME    or  export JP4BOOT_NOTARY_PROFILE=\"your-profile\""
+    echo ""
+fi
 YEAR=$(date +%Y)
 
 SCRIPT_PATH="${BASH_SOURCE[0]}"
