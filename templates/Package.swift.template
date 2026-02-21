@@ -1,0 +1,27 @@
+// swift-tools-version: 6.0
+import PackageDescription
+
+let package = Package(
+    name: "__APP_NAME__",
+    platforms: [
+        .macOS(.v15)
+    ],
+    products: [
+        .executable(
+            name: "__APP_NAME__",
+            targets: ["__APP_NAME__"]
+        )
+    ],
+    targets: [
+        .executableTarget(
+            name: "__APP_NAME__",
+            dependencies: [],
+            path: "Sources/__APP_NAME__"
+        ),
+        .testTarget(
+            name: "__APP_NAME__Tests",
+            dependencies: ["__APP_NAME__"],
+            path: "Tests/__APP_NAME__Tests"
+        )
+    ]
+)

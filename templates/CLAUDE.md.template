@@ -1,0 +1,61 @@
+# __APP_NAME__
+
+## Build & Run
+
+```bash
+./build.sh              # Full build + sign + notarize + DMG
+./build.sh build-only   # Just build and bundle (for development)
+./build.sh clean        # Remove build artifacts
+./run.sh                # Auto-build if needed, then launch
+```
+
+## Tech Stack
+
+- **Swift 6.0** with strict concurrency
+- **SwiftUI** (no AppKit unless necessary)
+- **macOS 15+** (Sequoia) — use Observable macro, not ObservableObject
+- **Swift Package Manager** — never raw swiftc
+- **No Xcode** — everything builds from command line
+
+## Project Structure
+
+```
+__APP_NAME__/
+├── Package.swift
+├── build.sh / run.sh
+├── Sources/__APP_NAME__/
+│   ├── App/                    # @main entry point
+│   ├── Models/                 # Data models
+│   ├── Services/               # Business logic, managers
+│   └── Views/
+│       ├── ContentView.swift   # Main view
+│       ├── Components/         # Reusable components
+│       └── Theme/              # Colors, fonts, styles
+├── Resources/
+│   ├── Info.plist
+│   ├── __APP_NAME__.entitlements
+│   └── AppIcon.png             # 1024x1024 source (icns generated at build)
+└── Tests/__APP_NAME__Tests/
+```
+
+## Conventions
+
+### File Naming
+- Views: `*View.swift` (e.g. `SettingsView.swift`)
+- Services: `*Service.swift` or `*Manager.swift` (e.g. `MIDIService.swift`)
+- Models: descriptive name (e.g. `Chord.swift`, `Sequence.swift`)
+
+### When to Create Subdirectories
+- `Views/Components/` — when you have 3+ reusable view components
+- `Views/Theme/` — when you extract colors/fonts/styles
+- New subdirectory in `Services/` or `Models/` — when a domain area has 3+ files
+
+### Commits
+- English, imperative mood (e.g. "Add settings view", "Fix MIDI input handling")
+- No AI attribution in commit messages
+
+### SwiftUI Patterns
+- Use `@Observable` macro (not `ObservableObject`/`@Published`)
+- Use `@State`, `@Environment` for view state
+- Prefer `@Bindable` for passing observable objects to subviews
+- Keep views small — extract components early

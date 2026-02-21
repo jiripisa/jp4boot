@@ -1,0 +1,29 @@
+#!/bin/bash
+# Run script for __APP_NAME__ — auto-builds if sources changed
+# Usage: ./run.sh
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
+APP_NAME="__APP_NAME__"
+APP_BUNDLE="$SCRIPT_DIR/build/$APP_NAME.app"
+
+# Build if app doesn't exist or sources are newer
+NEEDS_BUILD=false
+if [ ! -d "$APP_BUNDLE" ]; then
+    NEEDS_BUILD=true
+elif [ -n "$(find Sources -name '*.swift' -newer "$APP_BUNDLE" 2>/dev/null)" ]; then
+    NEEDS_BUILD=true
+elif [ -n "$(find Resources -newer "$APP_BUNDLE" 2>/dev/null)" ]; then
+    NEEDS_BUILD=true
+fi
+
+if [ "$NEEDS_BUILD" = true ]; then
+    echo "Building $APP_NAME..."
+    ./build.sh build-only
+fi
+
+echo "Launching $APP_NAME..."
+open "$APP_BUNDLE"

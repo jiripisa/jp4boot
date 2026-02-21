@@ -1,0 +1,9 @@
+import Testing
+@testable import __APP_NAME__
+
+@Suite("__APP_NAME__ Tests")
+struct __APP_NAME__Tests {
+    @Test func appLaunches() {
+        // Placeholder — add real tests here
+    }
+}
